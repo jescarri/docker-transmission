@@ -1,10 +1,4 @@
-FROM lsiobase/alpine:3.9
-
-# set version label
-ARG BUILD_DATE
-ARG VERSION
-LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
-LABEL maintainer="sparklyballs"
+FROM alpine:3.9
 
 RUN \
  echo "**** install packages ****" && \
@@ -42,12 +36,15 @@ RUN \
  rm -rf \
 	/tmp/*
 
+RUN deluser --remove-home transmission || true && \
+    delgroup transmission || true &&\
+    addgroup -g 1001 transmision && \
+    adduser -G transmision -h /home/transmission -D -u 1001 transmission
 
 
-
-# copy local files
-COPY root/ /
-
-# ports and volumes
+WORKDIR /home/transmission
+USER transmission
 EXPOSE 9091 51413
 VOLUME /config /downloads /watch
+ENTRYPOINT ["/usr/bin/transmission-daemon"]
+CMD ["$@"]
